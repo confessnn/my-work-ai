@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Chat, { ConnectionStatus } from "./chat";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
@@ -20,7 +21,6 @@ import {
   Upload,
   FileText,
   Check,
-  Send,
   Clock3,
   ChevronRight,
   PanelLeftClose,
@@ -161,10 +161,6 @@ export default function Workspace({ section }: { section: string }) {
   const [dark, setDark] = useState(false);
   const [query, setQuery] = useState("");
   const [code, setCode] = useState("전체");
-  const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>(
-    [],
-  );
   const [checks, setChecks] = useState<string[]>([]);
   const [name, setName] = useState("사용자");
   const [saved, setSaved] = useState(false);
@@ -234,7 +230,9 @@ export default function Workspace({ section }: { section: string }) {
             <strong>{current.label}</strong>
           </div>
           <div>
-            <span className="demo-pill">예시 모드</span>
+            <span className="demo-pill">
+              {section === "chat" ? "AI 채팅" : "예시 데이터"}
+            </span>
             <button
               className="icon-button"
               aria-label="화면 테마 전환"
@@ -264,8 +262,8 @@ export default function Workspace({ section }: { section: string }) {
           </div>
           <div className="demo-note">
             <span className="status-dot" />
-            현재 예시 데이터를 표시하고 있습니다. 외부 API는 연결되지
-            않았습니다.
+            업무별 데이터는 예시입니다. 파일 분석·공고 검색·매뉴얼 조회는
+            미연동입니다.
           </div>
           {section === "dashboard" && (
             <>
@@ -404,56 +402,7 @@ export default function Workspace({ section }: { section: string }) {
               </div>
             </>
           )}
-          {section === "chat" && (
-            <section className="panel chat">
-              <div className="chat-messages" aria-live="polite">
-                <div className="chat-welcome">
-                  <Sparkles size={36} />
-                  <h2>어떤 일을 함께 해볼까요?</h2>
-                  <p>예시 응답으로 대화 흐름을 체험하세요.</p>
-                </div>
-                {messages.map((m, i) => (
-                  <div className={`message ${m.role}`} key={i}>
-                    <strong>
-                      {m.role === "user" ? "나" : "AI 비서 · 예시"}
-                    </strong>
-                    <p>{m.text}</p>
-                  </div>
-                ))}
-              </div>
-              <form
-                className="composer"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!draft.trim()) return;
-                  setMessages([
-                    ...messages,
-                    { role: "user", text: draft.trim() },
-                    {
-                      role: "assistant",
-                      text: "예시 응답입니다. 요청을 받았습니다. 실제 AI 분석은 API 연결 후 이용할 수 있습니다. 지금은 업무별 메뉴에서 화면을 체험해 보세요.",
-                    },
-                  ]);
-                  setDraft("");
-                }}
-              >
-                <input
-                  aria-label="메시지"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="업무에 대해 무엇이든 물어보세요"
-                  maxLength={4000}
-                />
-                <button
-                  className="button primary"
-                  disabled={!draft.trim()}
-                  aria-label="메시지 보내기"
-                >
-                  <Send size={18} />
-                </button>
-              </form>
-            </section>
-          )}
+          {section === "chat" && <Chat />}
           {section === "cost" && (
             <>
               <UploadBox kind="cost" />
@@ -644,15 +593,16 @@ export default function Workspace({ section }: { section: string }) {
               </form>
               <section className="panel">
                 <h2>외부 API 연결 상태</h2>
-                {["AI 모델 API", "공공조달 API", "문서 분석 API"].map((t) => (
+                <ConnectionStatus />
+                {["공공조달 API", "문서 분석 API"].map((t) => (
                   <div className="file-row" key={t}>
                     <span>{t}</span>
                     <span className="status pending">미연결</span>
                   </div>
                 ))}
                 <p className="muted">
-                  이번 단계에서는 외부 API를 연결하지 않습니다. API 키를 입력할
-                  필요가 없습니다.
+                  OpenAI 키는 서버의 환경변수로만 설정합니다. 다른 업무별 API는
+                  미연동입니다.
                 </p>
               </section>
             </>
